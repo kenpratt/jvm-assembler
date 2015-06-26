@@ -1,0 +1,4 @@
+[root]
+name = "jvm_classfile_generator"
+version = "0.0.1"
+
