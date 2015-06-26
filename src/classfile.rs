@@ -43,11 +43,19 @@ pub struct Method {
 
 #[derive(Debug)]
 pub enum Attribute {
-    Code(u16, u16, u16, Vec<u8>, Vec<ExceptionTableEntry>, Vec<Attribute>),
+    Code(u16, u16, u16, Vec<Instruction>, Vec<ExceptionTableEntry>, Vec<Attribute>),
 }
 
 #[derive(Debug)]
 pub struct ExceptionTableEntry;
+
+#[derive(Debug)]
+pub enum Instruction {
+    GetStatic(u16),
+    LoadConstant(u8),
+    InvokeVirtual(u16),
+    Return,
+}
 
 pub trait Serialize {
     fn serialize(self, &mut Vec<u8>);
@@ -192,6 +200,16 @@ impl Serialize for Vec<ExceptionTableEntry> {
     }
 }
 
+impl Serialize for Vec<Instruction> {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        let mut code = vec![];
+        for inst in self.into_iter() {
+            inst.serialize(&mut code);
+        }
+        code.serialize(buf);
+    }
+}
+
 impl Serialize for Constant {
     fn serialize(self, buf: &mut Vec<u8>) {
         match self {
@@ -270,5 +288,27 @@ impl Serialize for Attribute {
 impl Serialize for ExceptionTableEntry {
     fn serialize(self, buf: &mut Vec<u8>) {
         panic!("TODO implement")
+    }
+}
+
+impl Serialize for Instruction {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        match self {
+            Instruction::GetStatic(index) => {
+                (0xB2 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::LoadConstant(index) => {
+                (0x12 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::InvokeVirtual(index) => {
+                (0xB6 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::Return => {
+                (0xB1 as u8).serialize(buf);
+            },
+        }
     }
 }
