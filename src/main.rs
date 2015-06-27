@@ -1,9 +1,11 @@
 mod classfile;
+mod classfile_builder;
 
 use std::io::Write;
 use std::fs::File;
 
 use classfile::*;
+use classfile_builder::*;
 
 fn print_hello_world() -> Classfile {
     let constants = vec![
@@ -122,10 +124,30 @@ fn print_addition_result() -> Classfile {
     Classfile::new(constants, 0x1, 17, 19, methods)
 }
 
+fn print_addition_result2() -> Classfile {
+    let mut classfile = ClassfileBuilder::new(ACC_PUBLIC, "hello", "java/lang/Object");
+
+    {
+        let mut method = classfile.define_method(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V");
+        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.bipush(11);
+        method.bipush(37);
+        method.iadd();
+        method.bipush(42);
+        method.iadd();
+        method.invoke_virtual("java/io/PrintStream", "println", "(I)V");
+        method.do_return();
+        method.done();
+    }
+
+    classfile.done()
+}
+
 fn main() {
     // let f = print_hello_world();
     // let f = print_integer();
-    let f = print_addition_result();
+    // let f = print_addition_result();
+    let f = print_addition_result2();
 
     println!("classfile: {:?}", f);
     let mut bytes = vec![];
