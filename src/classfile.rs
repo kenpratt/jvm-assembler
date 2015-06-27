@@ -1,6 +1,6 @@
 const CAFEBABE: u32 = 0xCAFEBABE;
-const MAJOR_VERSION: u16 = 0x31;
-const MINOR_VERSION: u16 = 0x0;
+const MAJOR_VERSION: u16 = 52;
+const MINOR_VERSION: u16 = 0;
 
 #[derive(Debug)]
 pub struct Classfile {
@@ -54,21 +54,19 @@ pub enum Instruction {
     GetStatic(u16),
     LoadConstant(u8),
     InvokeVirtual(u16),
+    Bipush(u8),
+    Iadd,
     Return,
 }
 
-pub trait Serialize {
-    fn serialize(self, &mut Vec<u8>);
-}
-
 impl Classfile {
-    pub fn new(constants: Vec<Constant>, this_class: u16, super_class: u16, methods: Vec<Method>) -> Classfile {
+    pub fn new(constants: Vec<Constant>, access_flags: u16, this_class: u16, super_class: u16, methods: Vec<Method>) -> Classfile {
         Classfile {
             magic: CAFEBABE,
             minor_version: MINOR_VERSION,
             major_version: MAJOR_VERSION,
             constant_pool: constants,
-            access_flags: 0x1,
+            access_flags: access_flags,
             this_class: this_class,
             super_class: super_class,
             interfaces: vec![],
@@ -80,14 +78,18 @@ impl Classfile {
 }
 
 impl Method {
-    pub fn new(name_index: u16, descriptor_index: u16, attributes: Vec<Attribute>) -> Method {
+    pub fn new(access_flags: u16, name_index: u16, descriptor_index: u16, attributes: Vec<Attribute>) -> Method {
         Method {
-            access_flags: 0x9,
+            access_flags: access_flags,
             name_index: name_index,
             descriptor_index: descriptor_index,
             attributes: attributes,
         }
     }
+}
+
+pub trait Serialize {
+    fn serialize(self, &mut Vec<u8>);
 }
 
 impl Serialize for Classfile {
@@ -246,13 +248,13 @@ impl Serialize for Constant {
 
 impl Serialize for Interface {
     fn serialize(self, buf: &mut Vec<u8>) {
-        panic!("TODO implement")
+        panic!("TODO implement Interface::serialize")
     }
 }
 
 impl Serialize for Field {
     fn serialize(self, buf: &mut Vec<u8>) {
-        panic!("TODO implement")
+        panic!("TODO implement Field::serialize")
     }
 }
 
@@ -287,7 +289,7 @@ impl Serialize for Attribute {
 
 impl Serialize for ExceptionTableEntry {
     fn serialize(self, buf: &mut Vec<u8>) {
-        panic!("TODO implement")
+        panic!("TODO implement ExceptionTableEntry::serialize")
     }
 }
 
@@ -305,6 +307,13 @@ impl Serialize for Instruction {
             Instruction::InvokeVirtual(index) => {
                 (0xB6 as u8).serialize(buf);
                 index.serialize(buf);
+            },
+            Instruction::Bipush(val) => {
+                (0x10 as u8).serialize(buf);
+                val.serialize(buf);
+            },
+            Instruction::Iadd => {
+                (0x60 as u8).serialize(buf);
             },
             Instruction::Return => {
                 (0xB1 as u8).serialize(buf);

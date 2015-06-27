@@ -1,5 +1,7 @@
 #!/bin/bash
-xxd hello.class > hello.hex
-xxd hello2.class > hello2.hex
-diff hello.hex hello2.hex
+a=$1
+b=$2
+xxd $a > $a.hex
+xxd $b > $b.hex
+diff $a.hex $b.hex
 rm *.hex
