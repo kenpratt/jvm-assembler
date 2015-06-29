@@ -1,5 +1,7 @@
-pub mod classfile;
-pub mod classfile_builder;
+mod classfile;
+mod classfile_builder;
+mod pretty_printing;
+mod serialization;
 
 use std::fs::File;
 use std::io::Write;
