@@ -1,4 +1,4 @@
 [root]
-name = "jvm_assembler"
+name = "jvm-assembler"
 version = "0.0.1"
 

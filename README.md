@@ -1,7 +1,7 @@
 JVM Assembler
 =============
 
-Tools for working with Java Virtual Machine Class files from rust.
+Tools for working with Java Virtual Machine Class files from Rust.
 
 Converts back and forth between binary `.class` files and Rust structs.
 
