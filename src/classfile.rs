@@ -390,21 +390,21 @@ impl Serializable for Constant {
 }
 
 impl Serializable for Interface {
-    fn serialize(self, buf: &mut Vec<u8>) {
+    fn serialize(self, _buf: &mut Vec<u8>) {
         panic!("TODO implement Interface::serialize")
     }
 
-    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Interface {
+    fn deserialize(_buf: &mut Deserializer, _classfile: &Classfile) -> Interface {
         panic!("TODO implement Interface::deserialize")
     }
 }
 
 impl Serializable for Field {
-    fn serialize(self, buf: &mut Vec<u8>) {
+    fn serialize(self, _buf: &mut Vec<u8>) {
         panic!("TODO implement Field::serialize")
     }
 
-    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Field {
+    fn deserialize(_buf: &mut Deserializer, _classfile: &Classfile) -> Field {
         panic!("TODO implement Field::deserialize")
     }
 }
@@ -469,11 +469,11 @@ impl Serializable for Attribute {
 }
 
 impl Serializable for ExceptionTableEntry {
-    fn serialize(self, buf: &mut Vec<u8>) {
+    fn serialize(self, _buf: &mut Vec<u8>) {
         panic!("TODO implement ExceptionTableEntry::serialize")
     }
 
-    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> ExceptionTableEntry {
+    fn deserialize(_buf: &mut Deserializer, _classfile: &Classfile) -> ExceptionTableEntry {
         panic!("TODO implement ExceptionTableEntry::deserialize")
     }
 }
@@ -595,7 +595,7 @@ impl<T: PrettyPrint, U: PrettyPrint> PrettyPrint for (T, U) {
     fn pretty_print(&self, f: &mut fmt::Formatter, indent: usize) -> fmt::Result {
         let (ref t, ref u) = *self;
         try!(t.pretty_print(f, indent));
-        write!(f, ": ");
+        try!(write!(f, ": "));
         try!(u.pretty_print(f, indent));
         Ok(())
     }
