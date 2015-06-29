@@ -143,21 +143,28 @@ fn print_addition_result2() -> Classfile {
     classfile.done()
 }
 
-fn main() {
-    // let f = print_hello_world();
-    // let f = print_integer();
-    // let f = print_addition_result();
-    let f = print_addition_result2();
-
-    println!("classfile: {:?}", f);
+fn write_classfile(classfile: Classfile, filename: &str) {
     let mut bytes = vec![];
-    f.serialize(&mut bytes);
-    println!("serialized:");
-    for b in bytes.iter() {
-        print!("{:X} ", b);
-    }
-    println!("");
+    classfile.serialize(&mut bytes);
 
-    let mut f = File::create("hello.class").unwrap();
+    let mut f = File::create(filename).unwrap();
     f.write_all(&bytes).unwrap();
+}
+
+fn read_classfile(filename: &str) -> Classfile {
+    let f = File::open(filename).unwrap();
+    Classfile::deserialize(Box::new(f))
+}
+
+fn round_trip(classfile: Classfile, filename: &str) {
+    write_classfile(classfile.clone(), filename);
+    let classfile2 = read_classfile(filename);
+    assert_eq!(classfile, classfile2);
+}
+
+fn main() {
+    round_trip(print_hello_world(), "hello_world.class");
+    round_trip(print_integer(), "integer.class");
+    round_trip(print_addition_result(), "addition_result.class");
+    round_trip(print_addition_result2(), "addition_result2.class");
 }
