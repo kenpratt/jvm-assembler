@@ -1,3 +1,3 @@
 [package]
-name = "jvm_classfile_generator"
+name = "jvm_assembler"
 version = "0.0.1"
