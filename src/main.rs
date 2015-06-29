@@ -6,7 +6,6 @@ use std::fs::File;
 use std::io::Write;
 
 use classfile::*;
-use classfile_builder::*;
 
 pub fn write_classfile(classfile: Classfile, filename: &str) {
     let mut bytes = vec![];
@@ -31,7 +30,7 @@ fn main() {
     let filename = &args[2];
 
     match command.as_ref() {
-        "read" => println!("{:?}", read_classfile(filename)),
+        "read" => print!("{}", read_classfile(filename)),
         _ => panic!("Unknown command: {}", command)
     }
 }
