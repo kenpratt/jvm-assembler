@@ -280,6 +280,13 @@ impl<'a> MethodBuilder<'a> {
         if has_result { self.increase_stack_depth(); }
     }
 
+    pub fn invoke_static(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
+        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+        self.push_instruction(Instruction::InvokeStatic(methodref_index));
+        self.decrease_stack_depth_by(n_args);
+        if has_result { self.increase_stack_depth(); }
+    }
+
     pub fn array_length(&mut self) {
         self.push_instruction(Instruction::ArrayLength);
     }

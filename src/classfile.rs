@@ -116,6 +116,7 @@ pub enum Instruction {
     GetStatic(u16),     // 0xB2
     InvokeVirtual(u16), // 0xB6
     InvokeSpecial(u16), // 0xB7
+    InvokeStatic(u16),  // 0xB8
     ArrayLength,        // 0xBE
 }
 
@@ -195,6 +196,7 @@ impl Instruction {
             Instruction::GetStatic(_) => 3,
             Instruction::InvokeVirtual(_) => 3,
             Instruction::InvokeSpecial(_) => 3,
+            Instruction::InvokeStatic(_) => 3,
             Instruction::ArrayLength => 1,
         }
     }

@@ -744,6 +744,10 @@ impl Serializable for Instruction {
                 (0xB7 as u8).serialize(buf);
                 index.serialize(buf);
             },
+            Instruction::InvokeStatic(index) => {
+                (0xB8 as u8).serialize(buf);
+                index.serialize(buf);
+            },
             Instruction::ArrayLength => {
                 (0xBE as u8).serialize(buf);
             },
@@ -785,6 +789,7 @@ impl Serializable for Instruction {
             0xB2 => Instruction::GetStatic(u16::deserialize(buf, classfile)),
             0xB6 => Instruction::InvokeVirtual(u16::deserialize(buf, classfile)),
             0xB7 => Instruction::InvokeSpecial(u16::deserialize(buf, classfile)),
+            0xB8 => Instruction::InvokeStatic(u16::deserialize(buf, classfile)),
             0xBE => Instruction::ArrayLength,
             _ => panic!("Don't know how to deserialize Instruction of type: 0x{:X}", code)
         }
