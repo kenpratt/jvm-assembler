@@ -126,10 +126,18 @@ impl<'a> MethodBuilder<'a> {
         self.increase_stack_depth();
     }
 
-    pub fn invoke_virtual(&mut self, class: &str, name: &str, descriptor: &str) {
+    pub fn invoke_virtual(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
         let methodref_index = self.classfile.define_methodref(class, name, descriptor);
         self.instructions.push(Instruction::InvokeVirtual(methodref_index));
-        self.decrease_stack_depth();
+        self.decrease_stack_depth_by(n_args + 1);
+        if has_result { self.increase_stack_depth(); }
+    }
+
+    pub fn invoke_special(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
+        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+        self.instructions.push(Instruction::InvokeSpecial(methodref_index));
+        self.decrease_stack_depth_by(n_args + 1);
+        if has_result { self.increase_stack_depth(); }
     }
 
     fn increase_stack_depth(&mut self) {
@@ -143,7 +151,15 @@ impl<'a> MethodBuilder<'a> {
         self.curr_stack_depth -= 1;
     }
 
+    fn decrease_stack_depth_by(&mut self, n: u8) {
+        self.curr_stack_depth -= n as u16;
+    }
+
     pub fn done(self) {
+        if self.curr_stack_depth != 0 {
+            println!("Warning: stack depth at the end of a method should be 0, but is {} instead", self.curr_stack_depth);
+        }
+
         let classfile = self.classfile;
         let code_index = classfile.define_utf8("Code");
         // TODO track locals counts instead of hard-coding

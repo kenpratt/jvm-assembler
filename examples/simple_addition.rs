@@ -20,7 +20,7 @@ fn main() {
         method.iadd();
 
         // print the result
-        method.invoke_virtual("java/io/PrintStream", "println", "(I)V");
+        method.invoke_virtual("java/io/PrintStream", "println", "(I)V", 1, false);
 
         // add return statement
         method.do_return();
