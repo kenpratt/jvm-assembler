@@ -44,12 +44,6 @@ impl ClassfileBuilder {
         self.push_constant(Constant::Class(name_index))
     }
 
-    fn define_name_and_type(&mut self, name: &str, descriptor: &str) -> u16 {
-        let name_index = self.define_utf8(name);
-        let descriptor_index = self.define_utf8(descriptor);
-        self.push_constant(Constant::NameAndType(name_index, descriptor_index))
-    }
-
     fn define_fieldref(&mut self, class: &str, name: &str, descriptor: &str) -> u16 {
         let class_index = self.define_class(class);
         let name_and_type_index = self.define_name_and_type(name, descriptor);
@@ -60,6 +54,12 @@ impl ClassfileBuilder {
         let class_index = self.define_class(class);
         let name_and_type_index = self.define_name_and_type(name, descriptor);
         self.push_constant(Constant::Methodref(class_index, name_and_type_index))
+    }
+
+    fn define_name_and_type(&mut self, name: &str, descriptor: &str) -> u16 {
+        let name_index = self.define_utf8(name);
+        let descriptor_index = self.define_utf8(descriptor);
+        self.push_constant(Constant::NameAndType(name_index, descriptor_index))
     }
 
     pub fn done(self) -> Classfile {
@@ -92,18 +92,6 @@ impl<'a> MethodBuilder<'a> {
         }
     }
 
-    pub fn get_static(&mut self, class: &str, name: &str, descriptor: &str) {
-        let fieldref_index = self.classfile.define_fieldref(class, name, descriptor);
-        self.instructions.push(Instruction::GetStatic(fieldref_index));
-        self.increase_stack_depth();
-    }
-
-    pub fn invoke_virtual(&mut self, class: &str, name: &str, descriptor: &str) {
-        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
-        self.instructions.push(Instruction::InvokeVirtual(methodref_index));
-        self.decrease_stack_depth();
-    }
-
     pub fn bipush(&mut self, value: i8) {
         self.instructions.push(Instruction::Bipush(value as u8));
         self.increase_stack_depth();
@@ -116,6 +104,18 @@ impl<'a> MethodBuilder<'a> {
 
     pub fn do_return(&mut self) {
         self.instructions.push(Instruction::Return);
+    }
+
+    pub fn get_static(&mut self, class: &str, name: &str, descriptor: &str) {
+        let fieldref_index = self.classfile.define_fieldref(class, name, descriptor);
+        self.instructions.push(Instruction::GetStatic(fieldref_index));
+        self.increase_stack_depth();
+    }
+
+    pub fn invoke_virtual(&mut self, class: &str, name: &str, descriptor: &str) {
+        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+        self.instructions.push(Instruction::InvokeVirtual(methodref_index));
+        self.decrease_stack_depth();
     }
 
     fn increase_stack_depth(&mut self) {
