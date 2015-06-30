@@ -638,16 +638,16 @@ impl Serializable for Instruction {
                 (0x12 as u8).serialize(buf);
                 index.serialize(buf);
             },
-            Instruction::Aload1 => {
+            Instruction::Aload0 => {
                 (0x2A as u8).serialize(buf);
             },
-            Instruction::Aload2 => {
+            Instruction::Aload1 => {
                 (0x2B as u8).serialize(buf);
             },
-            Instruction::Aload3 => {
+            Instruction::Aload2 => {
                 (0x2C as u8).serialize(buf);
             },
-            Instruction::Aload4 => {
+            Instruction::Aload3 => {
                 (0x2D as u8).serialize(buf);
             },
             Instruction::IfEq(index) => {
@@ -707,10 +707,10 @@ impl Serializable for Instruction {
         match code {
             0x10 => Instruction::Bipush(u8::deserialize(buf, classfile)),
             0x12 => Instruction::LoadConstant(u8::deserialize(buf, classfile)),
-            0x2A => Instruction::Aload1,
-            0x2B => Instruction::Aload2,
-            0x2C => Instruction::Aload3,
-            0x2D => Instruction::Aload4,
+            0x2A => Instruction::Aload0,
+            0x2B => Instruction::Aload1,
+            0x2C => Instruction::Aload2,
+            0x2D => Instruction::Aload3,
             0x99 => Instruction::IfEq(u16::deserialize(buf, classfile)),
             0x9A => Instruction::IfNe(u16::deserialize(buf, classfile)),
             0x9B => Instruction::IfLt(u16::deserialize(buf, classfile)),

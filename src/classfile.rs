@@ -86,10 +86,10 @@ pub enum VerificationType {
 pub enum Instruction {
     Bipush(u8),         // 0x10
     LoadConstant(u8),   // 0x12
-    Aload1,             // 0x2A
-    Aload2,             // 0x2B
-    Aload3,             // 0x2C
-    Aload4,             // 0x2D
+    Aload0,             // 0x2A
+    Aload1,             // 0x2B
+    Aload2,             // 0x2C
+    Aload3,             // 0x2D
     Iadd,               // 0x60
     IfEq(u16),          // 0x99
     IfNe(u16),          // 0x9A
@@ -151,10 +151,10 @@ impl Instruction {
         match *self {
             Instruction::Bipush(_) => 2,
             Instruction::LoadConstant(_) => 2,
+            Instruction::Aload0 => 1,
             Instruction::Aload1 => 1,
             Instruction::Aload2 => 1,
             Instruction::Aload3 => 1,
-            Instruction::Aload4 => 1,
             Instruction::Iadd => 1,
             Instruction::IfEq(_) => 3,
             Instruction::IfNe(_) => 3,

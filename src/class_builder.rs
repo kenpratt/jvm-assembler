@@ -127,6 +127,11 @@ impl<'a> MethodBuilder<'a> {
         self.increase_stack_depth();
     }
 
+    pub fn aload0(&mut self) {
+        self.push_instruction(Instruction::Aload0);
+        self.increase_stack_depth();
+    }
+
     pub fn aload1(&mut self) {
         self.push_instruction(Instruction::Aload1);
         self.increase_stack_depth();
@@ -139,11 +144,6 @@ impl<'a> MethodBuilder<'a> {
 
     pub fn aload3(&mut self) {
         self.push_instruction(Instruction::Aload3);
-        self.increase_stack_depth();
-    }
-
-    pub fn aload4(&mut self) {
-        self.push_instruction(Instruction::Aload4);
         self.increase_stack_depth();
     }
 
