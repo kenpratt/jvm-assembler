@@ -19,12 +19,12 @@ pub struct Classfile {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Constant {
-    String(u16),
-    Utf8(String),
-    Class(u16),
-    NameAndType(u16, u16),
-    Fieldref(u16, u16),
-    Methodref(u16, u16),
+    Utf8(String),          //  1
+    Class(u16),            //  7
+    String(u16),           //  8
+    Fieldref(u16, u16),    //  9
+    Methodref(u16, u16),   // 10
+    NameAndType(u16, u16), // 12
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -51,12 +51,12 @@ pub struct ExceptionTableEntry;
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum Instruction {
-    GetStatic(u16),
-    LoadConstant(u8),
-    InvokeVirtual(u16),
-    Bipush(u8),
-    Iadd,
-    Return,
+    Bipush(u8),         // 0x10
+    LoadConstant(u8),   // 0x12
+    Iadd,               // 0x60
+    Return,             // 0xB1
+    GetStatic(u16),     // 0xB2
+    InvokeVirtual(u16), // 0xB6
 }
 
 impl Classfile {

@@ -246,10 +246,6 @@ impl Serializable for Vec<Instruction> {
 impl Serializable for Constant {
     fn serialize(self, buf: &mut Vec<u8>) {
         match self {
-            Constant::String(string_index) => {
-                (8 as u8).serialize(buf);
-                string_index.serialize(buf);
-            },
             Constant::Utf8(string) => {
                 (1 as u8).serialize(buf);
                 string.serialize(buf);
@@ -258,10 +254,9 @@ impl Serializable for Constant {
                 (7 as u8).serialize(buf);
                 name_index.serialize(buf);
             },
-            Constant::NameAndType(name_index, descriptor_index) => {
-                (12 as u8).serialize(buf);
-                name_index.serialize(buf);
-                descriptor_index.serialize(buf);
+            Constant::String(string_index) => {
+                (8 as u8).serialize(buf);
+                string_index.serialize(buf);
             },
             Constant::Fieldref(class_index, name_and_type_index) => {
                 (9 as u8).serialize(buf);
@@ -273,18 +268,23 @@ impl Serializable for Constant {
                 class_index.serialize(buf);
                 name_and_type_index.serialize(buf);
             },
+            Constant::NameAndType(name_index, descriptor_index) => {
+                (12 as u8).serialize(buf);
+                name_index.serialize(buf);
+                descriptor_index.serialize(buf);
+            },
         }
     }
 
     fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Constant {
         let code = u8::deserialize(buf, classfile);
         match code {
-            8 => Constant::String(u16::deserialize(buf, classfile)),
             1 => Constant::Utf8(String::deserialize(buf, classfile)),
             7 => Constant::Class(u16::deserialize(buf, classfile)),
-            12 => Constant::NameAndType(u16::deserialize(buf, classfile), u16::deserialize(buf, classfile)),
+            8 => Constant::String(u16::deserialize(buf, classfile)),
             9 => Constant::Fieldref(u16::deserialize(buf, classfile), u16::deserialize(buf, classfile)),
             10 => Constant::Methodref(u16::deserialize(buf, classfile), u16::deserialize(buf, classfile)),
+            12 => Constant::NameAndType(u16::deserialize(buf, classfile), u16::deserialize(buf, classfile)),
             _ => panic!("Don't know how to deserialize Constant of type: {}", code)
         }
     }
@@ -382,21 +382,13 @@ impl Serializable for ExceptionTableEntry {
 impl Serializable for Instruction {
     fn serialize(self, buf: &mut Vec<u8>) {
         match self {
-            Instruction::GetStatic(index) => {
-                (0xB2 as u8).serialize(buf);
-                index.serialize(buf);
+            Instruction::Bipush(val) => {
+                (0x10 as u8).serialize(buf);
+                val.serialize(buf);
             },
             Instruction::LoadConstant(index) => {
                 (0x12 as u8).serialize(buf);
                 index.serialize(buf);
-            },
-            Instruction::InvokeVirtual(index) => {
-                (0xB6 as u8).serialize(buf);
-                index.serialize(buf);
-            },
-            Instruction::Bipush(val) => {
-                (0x10 as u8).serialize(buf);
-                val.serialize(buf);
             },
             Instruction::Iadd => {
                 (0x60 as u8).serialize(buf);
@@ -404,18 +396,26 @@ impl Serializable for Instruction {
             Instruction::Return => {
                 (0xB1 as u8).serialize(buf);
             },
+            Instruction::GetStatic(index) => {
+                (0xB2 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::InvokeVirtual(index) => {
+                (0xB6 as u8).serialize(buf);
+                index.serialize(buf);
+            },
         }
     }
 
     fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Instruction {
         let code = u8::deserialize(buf, classfile);
         match code {
-            0xB2 => Instruction::GetStatic(u16::deserialize(buf, classfile)),
-            0x12 => Instruction::LoadConstant(u8::deserialize(buf, classfile)),
-            0xB6 => Instruction::InvokeVirtual(u16::deserialize(buf, classfile)),
             0x10 => Instruction::Bipush(u8::deserialize(buf, classfile)),
+            0x12 => Instruction::LoadConstant(u8::deserialize(buf, classfile)),
             0x60 => Instruction::Iadd,
             0xB1 => Instruction::Return,
+            0xB2 => Instruction::GetStatic(u16::deserialize(buf, classfile)),
+            0xB6 => Instruction::InvokeVirtual(u16::deserialize(buf, classfile)),
             _ => panic!("Don't know how to deserialize Instruction of type: 0x{:X}", code)
         }
 
