@@ -1,5 +1,5 @@
 mod classfile;
-mod classfile_builder;
+mod class_builder;
 mod pretty_printing;
 mod serialization;
 
@@ -7,7 +7,7 @@ use std::fs::File;
 use std::io::Write;
 
 pub use classfile::*;
-pub use classfile_builder::*;
+pub use class_builder::*;
 
 pub fn write_classfile(classfile: Classfile, filename: &str) {
     let mut bytes = vec![];
@@ -22,6 +22,6 @@ pub fn read_classfile(filename: &str) -> Classfile {
     Classfile::deserialize(Box::new(f))
 }
 
-pub fn define_class(access_flags: u16, this_class: &str, super_class: &str) -> ClassfileBuilder {
-    ClassfileBuilder::new(access_flags, this_class, super_class)
+pub fn define_class(access_flags: u16, this_class: &str, super_class: &str) -> ClassBuilder {
+    ClassBuilder::new(access_flags, this_class, super_class)
 }

@@ -3,7 +3,7 @@ use classfile::*;
 pub const ACC_PUBLIC: u16 = 0x1;
 pub const ACC_STATIC: u16 = 0x8;
 
-pub struct ClassfileBuilder {
+pub struct ClassBuilder {
     access_flags: u16,
     this_class_index: u16,
     super_class_index: u16,
@@ -11,9 +11,9 @@ pub struct ClassfileBuilder {
     methods: Vec<Method>,
 }
 
-impl ClassfileBuilder {
-    pub fn new(access_flags: u16, this_class: &str, super_class: &str) -> ClassfileBuilder {
-        let mut builder = ClassfileBuilder {
+impl ClassBuilder {
+    pub fn new(access_flags: u16, this_class: &str, super_class: &str) -> ClassBuilder {
+        let mut builder = ClassBuilder {
             access_flags: access_flags,
             this_class_index: 0,
             super_class_index: 0,
@@ -68,7 +68,7 @@ impl ClassfileBuilder {
 }
 
 pub struct MethodBuilder<'a> {
-    classfile: &'a mut ClassfileBuilder,
+    classfile: &'a mut ClassBuilder,
     access_flags: u16,
     name_index: u16,
     descriptor_index: u16,
@@ -78,7 +78,7 @@ pub struct MethodBuilder<'a> {
 }
 
 impl<'a> MethodBuilder<'a> {
-    fn new(classfile: &'a mut ClassfileBuilder, access_flags: u16, name: &str, descriptor: &str) -> MethodBuilder<'a> {
+    fn new(classfile: &'a mut ClassBuilder, access_flags: u16, name: &str, descriptor: &str) -> MethodBuilder<'a> {
         let name_index = classfile.define_utf8(name);
         let descriptor_index = classfile.define_utf8(descriptor);
         MethodBuilder {
