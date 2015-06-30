@@ -145,3 +145,29 @@ impl Method {
         }
     }
 }
+
+impl Instruction {
+    pub fn size(&self) -> u8 {
+        match *self {
+            Instruction::Bipush(_) => 2,
+            Instruction::LoadConstant(_) => 2,
+            Instruction::Aload1 => 1,
+            Instruction::Aload2 => 1,
+            Instruction::Aload3 => 1,
+            Instruction::Aload4 => 1,
+            Instruction::Iadd => 1,
+            Instruction::IfEq(_) => 3,
+            Instruction::IfNe(_) => 3,
+            Instruction::IfLt(_) => 3,
+            Instruction::IfGe(_) => 3,
+            Instruction::IfGt(_) => 3,
+            Instruction::IfLe(_) => 3,
+            Instruction::Goto(_) => 3,
+            Instruction::Return => 1,
+            Instruction::GetStatic(_) => 3,
+            Instruction::InvokeVirtual(_) => 3,
+            Instruction::InvokeSpecial(_) => 3,
+            Instruction::ArrayLength => 1,
+        }
+    }
+}
