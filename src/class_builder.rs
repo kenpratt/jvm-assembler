@@ -44,6 +44,11 @@ impl ClassBuilder {
         self.push_constant(Constant::Class(name_index))
     }
 
+    fn define_string(&mut self, value: &str) -> u16 {
+        let string_index = self.define_utf8(value);
+        self.push_constant(Constant::String(string_index))
+    }
+
     fn define_fieldref(&mut self, class: &str, name: &str, descriptor: &str) -> u16 {
         let class_index = self.define_class(class);
         let name_and_type_index = self.define_name_and_type(name, descriptor);
@@ -94,6 +99,15 @@ impl<'a> MethodBuilder<'a> {
 
     pub fn bipush(&mut self, value: i8) {
         self.instructions.push(Instruction::Bipush(value as u8));
+        self.increase_stack_depth();
+    }
+
+    pub fn load_constant(&mut self, value: &str) {
+        let string_index = self.classfile.define_string(value);
+        if string_index > ::std::u8::MAX as u16 {
+            panic!("Placed a constant in too high of an index: {}", string_index)
+        }
+        self.instructions.push(Instruction::LoadConstant(string_index as u8));
         self.increase_stack_depth();
     }
 
