@@ -630,6 +630,27 @@ impl Serializable for VerificationType {
 impl Serializable for Instruction {
     fn serialize(self, buf: &mut Vec<u8>) {
         match self {
+            Instruction::IconstM1 => {
+                (0x2 as u8).serialize(buf);
+            },
+            Instruction::Iconst0 => {
+                (0x3 as u8).serialize(buf);
+            },
+            Instruction::Iconst1 => {
+                (0x4 as u8).serialize(buf);
+            },
+            Instruction::Iconst2 => {
+                (0x5 as u8).serialize(buf);
+            },
+            Instruction::Iconst3 => {
+                (0x6 as u8).serialize(buf);
+            },
+            Instruction::Iconst4 => {
+                (0x7 as u8).serialize(buf);
+            },
+            Instruction::Iconst5 => {
+                (0x8 as u8).serialize(buf);
+            },
             Instruction::Bipush(val) => {
                 (0x10 as u8).serialize(buf);
                 val.serialize(buf);
@@ -649,6 +670,9 @@ impl Serializable for Instruction {
             },
             Instruction::Aload3 => {
                 (0x2D as u8).serialize(buf);
+            },
+            Instruction::Aaload => {
+                (0x32 as u8).serialize(buf);
             },
             Instruction::IfEq(index) => {
                 (0x99 as u8).serialize(buf);
@@ -672,6 +696,30 @@ impl Serializable for Instruction {
             },
             Instruction::IfLe(index) => {
                 (0x9E as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpEq(index) => {
+                (0x9F as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpNe(index) => {
+                (0xA0 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpLt(index) => {
+                (0xA1 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpGe(index) => {
+                (0xA2 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpGt(index) => {
+                (0xA3 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfIcmpLe(index) => {
+                (0xA4 as u8).serialize(buf);
                 index.serialize(buf);
             },
             Instruction::Goto(index) => {
@@ -705,18 +753,32 @@ impl Serializable for Instruction {
     fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Instruction {
         let code = u8::deserialize(buf, classfile);
         match code {
+            0x02 => Instruction::IconstM1,
+            0x03 => Instruction::Iconst0,
+            0x04 => Instruction::Iconst1,
+            0x05 => Instruction::Iconst2,
+            0x06 => Instruction::Iconst3,
+            0x07 => Instruction::Iconst4,
+            0x08 => Instruction::Iconst5,
             0x10 => Instruction::Bipush(u8::deserialize(buf, classfile)),
             0x12 => Instruction::LoadConstant(u8::deserialize(buf, classfile)),
             0x2A => Instruction::Aload0,
             0x2B => Instruction::Aload1,
             0x2C => Instruction::Aload2,
             0x2D => Instruction::Aload3,
+            0x32 => Instruction::Aaload,
             0x99 => Instruction::IfEq(u16::deserialize(buf, classfile)),
             0x9A => Instruction::IfNe(u16::deserialize(buf, classfile)),
             0x9B => Instruction::IfLt(u16::deserialize(buf, classfile)),
             0x9C => Instruction::IfGe(u16::deserialize(buf, classfile)),
             0x9D => Instruction::IfGt(u16::deserialize(buf, classfile)),
             0x9E => Instruction::IfLe(u16::deserialize(buf, classfile)),
+            0x9F => Instruction::IfIcmpEq(u16::deserialize(buf, classfile)),
+            0xA0 => Instruction::IfIcmpNe(u16::deserialize(buf, classfile)),
+            0xA1 => Instruction::IfIcmpLt(u16::deserialize(buf, classfile)),
+            0xA2 => Instruction::IfIcmpGe(u16::deserialize(buf, classfile)),
+            0xA3 => Instruction::IfIcmpGt(u16::deserialize(buf, classfile)),
+            0xA4 => Instruction::IfIcmpLe(u16::deserialize(buf, classfile)),
             0xA7 => Instruction::Goto(u16::deserialize(buf, classfile)),
             0x60 => Instruction::Iadd,
             0xB1 => Instruction::Return,

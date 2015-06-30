@@ -113,6 +113,41 @@ impl<'a> MethodBuilder<'a> {
         }
     }
 
+    pub fn iconstm1(&mut self) {
+        self.push_instruction(Instruction::IconstM1);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst0(&mut self) {
+        self.push_instruction(Instruction::Iconst0);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst1(&mut self) {
+        self.push_instruction(Instruction::Iconst1);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst2(&mut self) {
+        self.push_instruction(Instruction::Iconst2);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst3(&mut self) {
+        self.push_instruction(Instruction::Iconst3);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst4(&mut self) {
+        self.push_instruction(Instruction::Iconst4);
+        self.increase_stack_depth();
+    }
+
+    pub fn iconst5(&mut self) {
+        self.push_instruction(Instruction::Iconst5);
+        self.increase_stack_depth();
+    }
+
     pub fn bipush(&mut self, value: i8) {
         self.push_instruction(Instruction::Bipush(value as u8));
         self.increase_stack_depth();
@@ -145,6 +180,11 @@ impl<'a> MethodBuilder<'a> {
     pub fn aload3(&mut self) {
         self.push_instruction(Instruction::Aload3);
         self.increase_stack_depth();
+    }
+
+    pub fn aaload(&mut self) {
+        self.push_instruction(Instruction::Aaload);
+        self.decrease_stack_depth();
     }
 
     pub fn iadd(&mut self) {
@@ -180,6 +220,36 @@ impl<'a> MethodBuilder<'a> {
     pub fn ifle(&mut self, label: &'a str) {
         self.delay_instruction(label, Instruction::IfLe(0));
         self.decrease_stack_depth();
+    }
+
+    pub fn if_icmp_eq(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpEq(0));
+        self.decrease_stack_depth_by(2);
+    }
+
+    pub fn if_icmp_ne(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpNe(0));
+        self.decrease_stack_depth_by(2);
+    }
+
+    pub fn if_icmp_lt(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpLt(0));
+        self.decrease_stack_depth_by(2);
+    }
+
+    pub fn if_icmp_ge(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpGe(0));
+        self.decrease_stack_depth_by(2);
+    }
+
+    pub fn if_icmp_gt(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpGt(0));
+        self.decrease_stack_depth_by(2);
+    }
+
+    pub fn if_icmp_le(&mut self, label: &'a str) {
+        self.delay_instruction(label, Instruction::IfIcmpLe(0));
+        self.decrease_stack_depth_by(2);
     }
 
     pub fn goto(&mut self, label: &'a str) {
@@ -294,6 +364,12 @@ fn fill_offset(instruction: Instruction, offset: u16) -> Instruction {
         Instruction::IfGe(_) => Instruction::IfGe(offset),
         Instruction::IfGt(_) => Instruction::IfGt(offset),
         Instruction::IfLe(_) => Instruction::IfLe(offset),
+        Instruction::IfIcmpEq(_) => Instruction::IfIcmpEq(offset),
+        Instruction::IfIcmpNe(_) => Instruction::IfIcmpNe(offset),
+        Instruction::IfIcmpLt(_) => Instruction::IfIcmpLt(offset),
+        Instruction::IfIcmpGe(_) => Instruction::IfIcmpGe(offset),
+        Instruction::IfIcmpGt(_) => Instruction::IfIcmpGt(offset),
+        Instruction::IfIcmpLe(_) => Instruction::IfIcmpLe(offset),
         Instruction::Goto(_) => Instruction::Goto(offset),
         _ => panic!("Instruction type doesn't have an offset to fill: {:?}", instruction)
     }
