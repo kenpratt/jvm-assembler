@@ -222,6 +222,48 @@ impl Serializable for Vec<ExceptionTableEntry> {
     }
 }
 
+impl Serializable for Vec<LineNumberTableEntry> {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        (self.len() as u16).serialize(buf);
+        for constant in self.into_iter() {
+            constant.serialize(buf);
+        }
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Vec<LineNumberTableEntry> {
+        let len = u16::deserialize(buf, classfile);
+        (0..len).into_iter().map(|_| LineNumberTableEntry::deserialize(buf, classfile)).collect()
+    }
+}
+
+impl Serializable for Vec<StackMapFrame> {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        (self.len() as u16).serialize(buf);
+        for constant in self.into_iter() {
+            constant.serialize(buf);
+        }
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Vec<StackMapFrame> {
+        let len = u16::deserialize(buf, classfile);
+        (0..len).into_iter().map(|_| StackMapFrame::deserialize(buf, classfile)).collect()
+    }
+}
+
+impl Serializable for Vec<VerificationType> {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        (self.len() as u16).serialize(buf);
+        for constant in self.into_iter() {
+            constant.serialize(buf);
+        }
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Vec<VerificationType> {
+        let len = u16::deserialize(buf, classfile);
+        (0..len).into_iter().map(|_| VerificationType::deserialize(buf, classfile)).collect()
+    }
+}
+
 impl Serializable for Vec<Instruction> {
     fn serialize(self, buf: &mut Vec<u8>) {
         let mut code = vec![];
@@ -330,21 +372,40 @@ impl Serializable for Method {
 
 impl Serializable for Attribute {
     fn serialize(self, buf: &mut Vec<u8>) {
-        match self {
-            Attribute::Code(attribute_name_index, max_stack, max_locals, code, exception_table, attributes) => {
-                // generate a temporary buffer holding the attribute "body"
-                let mut buf2 = vec![];
-                max_stack.serialize(&mut buf2);
-                max_locals.serialize(&mut buf2);
-                code.serialize(&mut buf2);
-                exception_table.serialize(&mut buf2);
-                attributes.serialize(&mut buf2);
+        // generate a temporary buffer holding the attribute "body"
+        let mut attribute_body = vec![];
+        let mut attribute_name_index;
 
-                // append the attribute body to the real buffer
-                attribute_name_index.serialize(buf);
-                buf2.serialize(buf);
-            },
+        {
+            let mut body_buf = &mut attribute_body;
+            match self {
+                Attribute::Code(name_index, max_stack, max_locals, code, exception_table, attributes) => {
+                    attribute_name_index = name_index;
+
+                    max_stack.serialize(body_buf);
+                    max_locals.serialize(body_buf);
+                    code.serialize(body_buf);
+                    exception_table.serialize(body_buf);
+                    attributes.serialize(body_buf);
+                },
+                Attribute::LineNumberTable(name_index, entries) => {
+                    attribute_name_index = name_index;
+                    entries.serialize(body_buf);
+                },
+                Attribute::SourceFile(name_index, sourcefile_index) => {
+                    attribute_name_index = name_index;
+                    sourcefile_index.serialize(body_buf);
+                },
+                Attribute::StackMapTable(name_index, entries) => {
+                    attribute_name_index = name_index;
+                    entries.serialize(body_buf);
+                },
+            }
         }
+
+        // append the attribute body to the real buffer
+        attribute_name_index.serialize(buf);
+        attribute_body.serialize(buf);
     }
 
     fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> Attribute {
@@ -363,6 +424,18 @@ impl Serializable for Attribute {
                 let attributes = Vec::deserialize(buf2, classfile);
                 Attribute::Code(attribute_name_index, max_stack, max_locals, code, exception_table, attributes)
             },
+            "LineNumberTable" => {
+                let entries = Vec::deserialize(buf2, classfile);
+                Attribute::LineNumberTable(attribute_name_index, entries)
+            },
+            "SourceFile" => {
+                let sourcefile_index = u16::deserialize(buf2, classfile);
+                Attribute::SourceFile(attribute_name_index, sourcefile_index)
+            },
+            "StackMapTable" => {
+                let entries = Vec::deserialize(buf2, classfile);
+                Attribute::StackMapTable(attribute_name_index, entries)
+            },
             _ => panic!("TODO implement Attribute::deserialize for attribute type: {:?}", attribute_name)
 
         }
@@ -379,6 +452,181 @@ impl Serializable for ExceptionTableEntry {
     }
 }
 
+impl Serializable for LineNumberTableEntry {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        self.start_pc.serialize(buf);
+        self.line_number.serialize(buf);
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> LineNumberTableEntry {
+        LineNumberTableEntry {
+            start_pc: u16::deserialize(buf, classfile),
+            line_number: u16::deserialize(buf, classfile),
+        }
+    }
+}
+
+impl Serializable for StackMapFrame {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        match self {
+            StackMapFrame::SameFrame(offset_delta) => {
+                let frame_type = offset_delta;
+                frame_type.serialize(buf);
+            },
+            StackMapFrame::SameLocals1StackItemFrame(offset_delta, verification_type) => {
+                let frame_type = offset_delta + 64;
+                frame_type.serialize(buf);
+                verification_type.serialize(buf);
+            },
+            StackMapFrame::SameLocals1StackItemFrameExtended(offset_delta, verification_type) => {
+                let frame_type: u8 = 247;
+                frame_type.serialize(buf);
+                offset_delta.serialize(buf);
+                verification_type.serialize(buf);
+            },
+            StackMapFrame::ChopFrame(k, offset_delta) => {
+                let frame_type = 251 - k;
+                frame_type.serialize(buf);
+                offset_delta.serialize(buf);
+            },
+            StackMapFrame::SameFrameExtended(offset_delta) => {
+                let frame_type: u8 = 251;
+                frame_type.serialize(buf);
+                offset_delta.serialize(buf);
+            },
+            StackMapFrame::AppendFrame(k, offset_delta, locals) => {
+                let frame_type = 251 + k;
+                frame_type.serialize(buf);
+                offset_delta.serialize(buf);
+                for local in locals {
+                    local.serialize(buf);
+                }
+            },
+            StackMapFrame::FullFrame(offset_delta, locals, stack_items) => {
+                let frame_type: u8 = 255;
+                frame_type.serialize(buf);
+                offset_delta.serialize(buf);
+                locals.serialize(buf);
+                stack_items.serialize(buf);
+            },
+        }
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> StackMapFrame {
+        let frame_type = u8::deserialize(buf, classfile);
+        match frame_type {
+            0...63 => {
+                let offset_delta = frame_type;
+                StackMapFrame::SameFrame(offset_delta)
+            },
+            64...127 => {
+                let offset_delta = frame_type - 64;
+                let verification_type = VerificationType::deserialize(buf, classfile);
+                StackMapFrame::SameLocals1StackItemFrame(offset_delta, verification_type)
+            },
+            247 => {
+                let offset_delta = u16::deserialize(buf, classfile);
+                let verification_type = VerificationType::deserialize(buf, classfile);
+                StackMapFrame::SameLocals1StackItemFrameExtended(offset_delta, verification_type)
+            },
+            248...250 => {
+                let k = 251 - frame_type;
+                let offset_delta = u16::deserialize(buf, classfile);
+                StackMapFrame::ChopFrame(k, offset_delta)
+            },
+            251 => {
+                let offset_delta = u16::deserialize(buf, classfile);
+                StackMapFrame::SameFrameExtended(offset_delta)
+            },
+            252...254 => {
+                let k = frame_type - 251;
+                let offset_delta = u16::deserialize(buf, classfile);
+                let locals = (0..k).into_iter().map(|_| VerificationType::deserialize(buf, classfile)).collect();
+                StackMapFrame::AppendFrame(k, offset_delta, locals)
+            },
+            255 => {
+                let offset_delta = u16::deserialize(buf, classfile);
+                let locals = Vec::deserialize(buf, classfile);
+                let stack_items = Vec::deserialize(buf, classfile);
+                StackMapFrame::FullFrame(offset_delta, locals, stack_items)
+            },
+            _ => panic!("Invalid StackMapFrame type: {}", frame_type)
+        }
+    }
+}
+
+impl Serializable for VerificationType {
+    fn serialize(self, buf: &mut Vec<u8>) {
+        match self {
+            VerificationType::Top => {
+                (0 as u8).serialize(buf);
+            },
+            VerificationType::Integer => {
+                (1 as u8).serialize(buf);
+            },
+            VerificationType::Float => {
+                (2 as u8).serialize(buf);
+            },
+            VerificationType::Long => {
+                (3 as u8).serialize(buf);
+            },
+            VerificationType::Double => {
+                (4 as u8).serialize(buf);
+            },
+            VerificationType::Null => {
+                (5 as u8).serialize(buf);
+            },
+            VerificationType::UninitializedThis => {
+                (6 as u8).serialize(buf);
+            },
+            VerificationType::Object(cpool_index) => {
+                (7 as u8).serialize(buf);
+                cpool_index.serialize(buf);
+            },
+            VerificationType::Uninitialized(offset) => {
+                (8 as u8).serialize(buf);
+                offset.serialize(buf);
+            },
+        }
+    }
+
+    fn deserialize(buf: &mut Deserializer, classfile: &Classfile) -> VerificationType {
+        let verification_type = u8::deserialize(buf, classfile);
+        match verification_type {
+            0 => {
+                VerificationType::Top
+            },
+            1 => {
+                VerificationType::Integer
+            },
+            2 => {
+                VerificationType::Float
+            },
+            3 => {
+                VerificationType::Long
+            },
+            4 => {
+                VerificationType::Double
+            },
+            5 => {
+                VerificationType::Null
+            },
+            6 => {
+                VerificationType::UninitializedThis
+            },
+            7 => {
+                let cpool_index = u16::deserialize(buf, classfile);
+                VerificationType::Object(cpool_index)
+            },
+            8 => {
+                let offset = u16::deserialize(buf, classfile);
+                VerificationType::Uninitialized(offset)
+            },
+            _ => panic!("Invalid VerificationType: {}", verification_type)
+        }
+    }
+}
+
 impl Serializable for Instruction {
     fn serialize(self, buf: &mut Vec<u8>) {
         match self {
@@ -388,6 +636,46 @@ impl Serializable for Instruction {
             },
             Instruction::LoadConstant(index) => {
                 (0x12 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::Aload1 => {
+                (0x2A as u8).serialize(buf);
+            },
+            Instruction::Aload2 => {
+                (0x2B as u8).serialize(buf);
+            },
+            Instruction::Aload3 => {
+                (0x2C as u8).serialize(buf);
+            },
+            Instruction::Aload4 => {
+                (0x2D as u8).serialize(buf);
+            },
+            Instruction::IfEq(index) => {
+                (0x99 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfNe(index) => {
+                (0x9A as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfLt(index) => {
+                (0x9B as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfGe(index) => {
+                (0x9C as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfGt(index) => {
+                (0x9D as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::IfLe(index) => {
+                (0x9E as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::Goto(index) => {
+                (0xA7 as u8).serialize(buf);
                 index.serialize(buf);
             },
             Instruction::Iadd => {
@@ -404,6 +692,13 @@ impl Serializable for Instruction {
                 (0xB6 as u8).serialize(buf);
                 index.serialize(buf);
             },
+            Instruction::InvokeSpecial(index) => {
+                (0xB7 as u8).serialize(buf);
+                index.serialize(buf);
+            },
+            Instruction::ArrayLength => {
+                (0xBE as u8).serialize(buf);
+            },
         }
     }
 
@@ -412,10 +707,23 @@ impl Serializable for Instruction {
         match code {
             0x10 => Instruction::Bipush(u8::deserialize(buf, classfile)),
             0x12 => Instruction::LoadConstant(u8::deserialize(buf, classfile)),
+            0x2A => Instruction::Aload1,
+            0x2B => Instruction::Aload2,
+            0x2C => Instruction::Aload3,
+            0x2D => Instruction::Aload4,
+            0x99 => Instruction::IfEq(u16::deserialize(buf, classfile)),
+            0x9A => Instruction::IfNe(u16::deserialize(buf, classfile)),
+            0x9B => Instruction::IfLt(u16::deserialize(buf, classfile)),
+            0x9C => Instruction::IfGe(u16::deserialize(buf, classfile)),
+            0x9D => Instruction::IfGt(u16::deserialize(buf, classfile)),
+            0x9E => Instruction::IfLe(u16::deserialize(buf, classfile)),
+            0xA7 => Instruction::Goto(u16::deserialize(buf, classfile)),
             0x60 => Instruction::Iadd,
             0xB1 => Instruction::Return,
             0xB2 => Instruction::GetStatic(u16::deserialize(buf, classfile)),
             0xB6 => Instruction::InvokeVirtual(u16::deserialize(buf, classfile)),
+            0xB7 => Instruction::InvokeSpecial(u16::deserialize(buf, classfile)),
+            0xBE => Instruction::ArrayLength,
             _ => panic!("Don't know how to deserialize Instruction of type: 0x{:X}", code)
         }
 

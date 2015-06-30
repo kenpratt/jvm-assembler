@@ -140,11 +140,43 @@ impl PrettyPrint for Attribute {
                 try!(attributes.pretty_print_preln(f, indent + 2));
                 Ok(())
             },
+            Attribute::LineNumberTable(_, ref entries) => {
+                try!(write!(f, "LineNumberTable:"));
+                try!(entries.pretty_print_preln(f, indent));
+                Ok(())
+            },
+            Attribute::SourceFile(_, index) => {
+                try!(write!(f, "SourceFile(index: {}):", index));
+                Ok(())
+            }
+            Attribute::StackMapTable(_, ref entries) => {
+                try!(write!(f, "StackMapTable:"));
+                try!(entries.pretty_print_preln(f, indent));
+                Ok(())
+            },
         }
     }
 }
 
 impl PrettyPrint for ExceptionTableEntry {
+    fn pretty_print(&self, f: &mut fmt::Formatter, _indent: usize) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl PrettyPrint for LineNumberTableEntry {
+    fn pretty_print(&self, f: &mut fmt::Formatter, _indent: usize) -> fmt::Result {
+        write!(f, "start_pc: {:2}, line_number: {:2}", self.start_pc, self.line_number)
+    }
+}
+
+impl PrettyPrint for StackMapFrame {
+    fn pretty_print(&self, f: &mut fmt::Formatter, _indent: usize) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
+impl PrettyPrint for VerificationType {
     fn pretty_print(&self, f: &mut fmt::Formatter, _indent: usize) -> fmt::Result {
         write!(f, "{:?}", self)
     }

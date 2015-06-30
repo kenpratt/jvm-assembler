@@ -44,19 +44,65 @@ pub struct Method {
 #[derive(Clone, Debug, PartialEq)]
 pub enum Attribute {
     Code(u16, u16, u16, Vec<Instruction>, Vec<ExceptionTableEntry>, Vec<Attribute>),
+    LineNumberTable(u16, Vec<LineNumberTableEntry>),
+    SourceFile(u16, u16),
+    StackMapTable(u16, Vec<StackMapFrame>),
 }
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct ExceptionTableEntry;
 
 #[derive(Clone, Debug, PartialEq)]
+pub struct LineNumberTableEntry {
+    pub start_pc: u16,
+    pub line_number: u16,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum StackMapFrame {
+    SameFrame(u8),
+    SameLocals1StackItemFrame(u8, VerificationType),
+    SameLocals1StackItemFrameExtended(u16, VerificationType),
+    ChopFrame(u8, u16),
+    SameFrameExtended(u16),
+    AppendFrame(u8, u16, Vec<VerificationType>),
+    FullFrame(u16, Vec<VerificationType>, Vec<VerificationType>),
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum VerificationType {
+    Top,                // 0
+    Integer,            // 1
+    Float,              // 2
+    Long,               // 3
+    Double,             // 4
+    Null,               // 5
+    UninitializedThis,  // 6
+    Object(u16),        // 7
+    Uninitialized(u16), // 8
+}
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Instruction {
     Bipush(u8),         // 0x10
     LoadConstant(u8),   // 0x12
+    Aload1,             // 0x2A
+    Aload2,             // 0x2B
+    Aload3,             // 0x2C
+    Aload4,             // 0x2D
     Iadd,               // 0x60
+    IfEq(u16),          // 0x99
+    IfNe(u16),          // 0x9A
+    IfLt(u16),          // 0x9B
+    IfGe(u16),          // 0x9C
+    IfGt(u16),          // 0x9C
+    IfLe(u16),          // 0x9E
+    Goto(u16),          // 0xA7
     Return,             // 0xB1
     GetStatic(u16),     // 0xB2
     InvokeVirtual(u16), // 0xB6
+    InvokeSpecial(u16), // 0xB7
+    ArrayLength,        // 0xBE
 }
 
 impl Classfile {
