@@ -10,9 +10,18 @@ Supports JVM version 8.
 Examples
 --------
 
-To run examples:
+To run the examples:
 
 ```
 cargo run --example hello_world && java hello_world
 cargo run --example simple_addition && java simple_addition
+```
+
+Inspecting existing `.class` files
+----------------------------------
+
+The following command will print out a nicely-formatted representation of the structure of a `.class` file:
+
+```
+cargo run read myfile.class
 ```
