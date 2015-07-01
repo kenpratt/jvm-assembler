@@ -7,7 +7,7 @@ fn main() {
 
     {
         // create main method
-        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V");
+        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", &[Java::Array(Box::new(Java::Class("java/lang/String")))], &Java::Void);
 
         // if (args.length > 0) {
         //     System.out.println("Hello with args!");
@@ -19,16 +19,16 @@ fn main() {
         method.ifle("false");
 
         // true case
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("Hello with args!");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
         method.goto("after");
 
         // false case
         method.label("false");
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("Hello without args!");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
 
         // after
         method.label("after");

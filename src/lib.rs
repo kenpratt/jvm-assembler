@@ -1,5 +1,6 @@
 mod classfile;
 mod class_builder;
+mod java_type_signatures;
 mod pretty_printing;
 mod serialization;
 
@@ -8,6 +9,7 @@ use std::io::Write;
 
 pub use classfile::*;
 pub use class_builder::*;
+pub use java_type_signatures::*;
 
 pub fn write_classfile(classfile: Classfile, filename: &str) {
     let mut bytes = vec![];

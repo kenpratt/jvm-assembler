@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use classfile::*;
+use java_type_signatures::*;
 
 pub const ACC_PUBLIC: u16 = 0x1;
 pub const ACC_STATIC: u16 = 0x8;
@@ -27,8 +28,8 @@ impl ClassBuilder {
         builder
     }
 
-    pub fn define_method(&mut self, access_flags: u16, name: &str, descriptor: &str) -> MethodBuilder {
-        MethodBuilder::new(self, access_flags, name, descriptor)
+    pub fn define_method(&mut self, access_flags: u16, name: &str, argument_types: &[Java], return_type: &Java) -> MethodBuilder {
+        MethodBuilder::new(self, access_flags, name, argument_types, return_type)
     }
 
     fn push_constant(&mut self, constant: Constant) -> u16 {
@@ -51,21 +52,23 @@ impl ClassBuilder {
         self.push_constant(Constant::String(string_index))
     }
 
-    fn define_fieldref(&mut self, class: &str, name: &str, descriptor: &str) -> u16 {
+    fn define_fieldref(&mut self, class: &str, name: &str, field_type: &Java) -> u16 {
         let class_index = self.define_class(class);
-        let name_and_type_index = self.define_name_and_type(name, descriptor);
+        let descriptor = format!("{}", field_type);
+        let name_and_type_index = self.define_name_and_type(name, &descriptor);
         self.push_constant(Constant::Fieldref(class_index, name_and_type_index))
     }
 
-    fn define_methodref(&mut self, class: &str, name: &str, descriptor: &str) -> u16 {
+    fn define_methodref(&mut self, class: &str, name: &str, argument_types: &[Java], return_type: &Java) -> u16 {
         let class_index = self.define_class(class);
-        let name_and_type_index = self.define_name_and_type(name, descriptor);
+        let descriptor = method_signature(argument_types, return_type);
+        let name_and_type_index = self.define_name_and_type(name, &descriptor);
         self.push_constant(Constant::Methodref(class_index, name_and_type_index))
     }
 
     fn define_name_and_type(&mut self, name: &str, descriptor: &str) -> u16 {
         let name_index = self.define_utf8(name);
-        let descriptor_index = self.define_utf8(descriptor);
+        let descriptor_index = self.define_utf8(&descriptor);
         self.push_constant(Constant::NameAndType(name_index, descriptor_index))
     }
 
@@ -95,9 +98,10 @@ pub enum IntermediateInstruction<'a> {
 }
 
 impl<'a> MethodBuilder<'a> {
-    fn new(classfile: &'a mut ClassBuilder, access_flags: u16, name: &str, descriptor: &str) -> MethodBuilder<'a> {
+    fn new(classfile: &'a mut ClassBuilder, access_flags: u16, name: &str, argument_types: &[Java], return_type: &Java) -> MethodBuilder<'a> {
         let name_index = classfile.define_utf8(name);
-        let descriptor_index = classfile.define_utf8(descriptor);
+        let descriptor = method_signature(argument_types, return_type);
+        let descriptor_index = classfile.define_utf8(&descriptor);
         MethodBuilder {
             classfile: classfile,
             access_flags: access_flags,
@@ -260,31 +264,31 @@ impl<'a> MethodBuilder<'a> {
         self.push_instruction(Instruction::Return);
     }
 
-    pub fn get_static(&mut self, class: &str, name: &str, descriptor: &str) {
-        let fieldref_index = self.classfile.define_fieldref(class, name, descriptor);
+    pub fn get_static(&mut self, class: &str, name: &str, argument_type: &Java) {
+        let fieldref_index = self.classfile.define_fieldref(class, name, argument_type);
         self.push_instruction(Instruction::GetStatic(fieldref_index));
         self.increase_stack_depth();
     }
 
-    pub fn invoke_virtual(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
-        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+    pub fn invoke_virtual(&mut self, class: &str, name: &str, argument_types: &[Java], return_type: &Java) {
+        let methodref_index = self.classfile.define_methodref(class, name, argument_types, return_type);
         self.push_instruction(Instruction::InvokeVirtual(methodref_index));
-        self.decrease_stack_depth_by(n_args + 1);
-        if has_result { self.increase_stack_depth(); }
+        self.decrease_stack_depth_by(argument_types.len() as u8 + 1);
+        if *return_type != Java::Void { self.increase_stack_depth(); }
     }
 
-    pub fn invoke_special(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
-        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+    pub fn invoke_special(&mut self, class: &str, name: &str, argument_types: &[Java], return_type: &Java) {
+        let methodref_index = self.classfile.define_methodref(class, name, argument_types, return_type);
         self.push_instruction(Instruction::InvokeSpecial(methodref_index));
-        self.decrease_stack_depth_by(n_args + 1);
-        if has_result { self.increase_stack_depth(); }
+        self.decrease_stack_depth_by(argument_types.len() as u8 + 1);
+        if *return_type != Java::Void { self.increase_stack_depth(); }
     }
 
-    pub fn invoke_static(&mut self, class: &str, name: &str, descriptor: &str, n_args: u8, has_result: bool) {
-        let methodref_index = self.classfile.define_methodref(class, name, descriptor);
+    pub fn invoke_static(&mut self, class: &str, name: &str, argument_types: &[Java], return_type: &Java) {
+        let methodref_index = self.classfile.define_methodref(class, name, argument_types, return_type);
         self.push_instruction(Instruction::InvokeStatic(methodref_index));
-        self.decrease_stack_depth_by(n_args);
-        if has_result { self.increase_stack_depth(); }
+        self.decrease_stack_depth_by(argument_types.len() as u8);
+        if *return_type != Java::Void { self.increase_stack_depth(); }
     }
 
     pub fn array_length(&mut self) {

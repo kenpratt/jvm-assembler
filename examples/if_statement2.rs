@@ -7,7 +7,7 @@ fn main() {
 
     {
         // create main method
-        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V");
+        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", &[Java::Array(Box::new(Java::Class("java/lang/String")))], &Java::Void);
 
         // if (args.length > 0) {
         //     System.out.println("Hello with args!");
@@ -24,40 +24,40 @@ fn main() {
         method.ifle("outer-else");
 
         // outer if: true case
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("Hello with args!");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
 
         // inner if: load the first arg and calculate string length
         method.aload0();
         method.iconst0();
         method.aaload();
-        method.invoke_virtual("java/lang/String", "length", "()I", 0, true);
+        method.invoke_virtual("java/lang/String", "length", &[], &Java::Int);
 
         // inner if: do comparison against 5
         method.iconst5();
         method.if_icmp_lt("inner-else");
 
         // inner if: true case
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("First arg has at least 5 characters");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
         method.goto("outer-after");
 
         // inner if: false case
         method.label("inner-else");
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("First arg has less than 5 characters");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
 
         // outer if: done true case
         method.goto("outer-after");
 
         // outer if: false case
         method.label("outer-else");
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
         method.load_constant("Hello without args!");
-        method.invoke_virtual("java/io/PrintStream", "println", "(Ljava/lang/Object;)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Class("java/lang/String")], &Java::Void);
 
         // after outer if
         method.label("outer-after");

@@ -7,10 +7,10 @@ fn main() {
 
     {
         // create main method
-        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", "([Ljava/lang/String;)V");
+        let mut method = class.define_method(ACC_PUBLIC | ACC_STATIC, "main", &[Java::Array(Box::new(Java::Class("java/lang/String")))], &Java::Void);
 
         // push PrintStream object onto the stack for later use
-        method.get_static("java/lang/System", "out", "Ljava/io/PrintStream;");
+        method.get_static("java/lang/System", "out", &Java::Class("java/io/PrintStream"));
 
         // execute 11 + 37 + 42
         method.bipush(11);
@@ -20,7 +20,7 @@ fn main() {
         method.iadd();
 
         // print the result
-        method.invoke_virtual("java/io/PrintStream", "println", "(I)V", 1, false);
+        method.invoke_virtual("java/io/PrintStream", "println", &[Java::Int], &Java::Void);
 
         // add return statement
         method.do_return();
